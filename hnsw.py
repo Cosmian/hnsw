@@ -81,16 +81,18 @@ def get_furthest_element(W, q):
     return furthest_element
 
 class HNSW:
-    def __init__(self, n, M, Mmax, mL):
+    def __init__(self, n, M, Mmax, mL, efC = 10, nodes = []):
         assert M <= Mmax
         self.n = n
         self.max_layer = -1
         self.M = M
         self.Mmax = Mmax
         self.mL = mL
-        self.graph = {} #empty_graph_with_layers(self.max_layer)
+        self.graph = {}
         self.is_empty = True
         self.enter_point = ()
+        for node in nodes:
+            self.insert(node, efC)
 
     def check_graph(self):
         for layer in self.graph:
@@ -116,14 +118,14 @@ class HNSW:
         return neighbors
 
     def select_neighbors_heuristic(self, q, C, M, lc, extendCandidates=True, keepPrunedConnections=True):
-        R = []  
-        W = C.copy() 
+        R = []
+        W = C.copy()
         if extendCandidates:  # extend candidates by their neighbors
             for e in C:
                 for eadj in self.neighborhood(e, lc):#WARN!NG
                     if eadj not in W:
                         W.append(eadj)
-        Wd = []  
+        Wd = []
         while len(W) > 0 and len(R) < M:
             e = extract_nearest_element(W, q)
             if self.is_closer_to_q(e, q, R):
@@ -141,8 +143,8 @@ class HNSW:
             if distance(q, point) < distance_to_point1:
                 return False
         return True
-    
-            
+
+
 
 
 
@@ -167,10 +169,10 @@ class HNSW:
                 self.graph[lc][e].remove(f)
                 self.graph[lc][f].remove(e)'''
 
-        
+
         if len(self.graph[lc][q]) == 0:
             print('coucou',lc)
-            
+
 
 
     def search_layer(self, q, lc, ep, ef):
@@ -189,11 +191,11 @@ class HNSW:
                     if distance(e, q) < distance(f, q) or len(W) < ef:
                         C.append(e)
                         W.append(e)
-                        
+
                         if len(W) > ef:
                             W.remove(f)
         return W
-    
+
 
     def search_layer_leak(self, q, lc, ep, ef,Leak):
 
@@ -202,7 +204,7 @@ class HNSW:
         W = ep.copy()
 
         while C:
-            
+
             c = extract_nearest_element(C, q)
             f = get_furthest_element(W, q)
 
@@ -218,7 +220,7 @@ class HNSW:
                     if distance(e, q) < distance(f, q) or len(W) < ef:
                         C.append(e)
                         W.append(e)
-                        
+
                         if len(W) > ef:
                             W.remove(f)
         return W
@@ -309,118 +311,4 @@ def plot_hnsw_graph(hnsw):
 
     plt.tight_layout()
     plt.show()'''
-    
-'''------------------------------------------------------------'''
 
-
-dim = 3                     #dimension des vecteurs
-M = 8                       #Nombre de connexion lors de l'insertion
-Mmax = 8                    #Nombre de connexion maximale d'un noeuds dans hnsw (Mmax=2*Mmax au niveau 0)
-mL = 0.9                    #Coefficient qui pondere la loi de proba (plus mL est haut et plus le niveau max est haut)
-max_value = 100             #Max value pour les coefficient du vecteur 
-nb_nodes = 700              #Nombre de vecteurs dans hnsw
-nb_requetes = 1000          #Nombre de requetes approximées
-efC = 10                    #Coefficient de voisins explorés lors de la construction
-known = 70                  #Nombre de vecteurs connus
-
-
-def generation(nb_nodes,nb_requetes):       #Genère un set de Nodes qui servira à construire hnsw, et un set de requetes qui serviront de recherches approximées 
-    nodes = set()
-    Requetes = set()
-    Base = set()
-    for _ in range(nb_nodes):
-        node = gen_random_vector(max_value, dim)
-        if node in nodes:
-            continue
-        nodes.add(node)
-    Base=nodes.copy()
-    for _ in range (nb_requetes):
-        node = gen_random_vector(max_value, dim)
-        if node in nodes:
-            continue
-        nodes.add(node)
-    Requetes = nodes - Base
-    return Requetes, Base
-    
-def construction(nodes):            #Generes hnsw, en inserant les points dans l'ordre 
-    hnsw = HNSW(dim,M,Mmax,mL)
-    hnsw.graph = {} 
-    hnsw.is_empty = True
-    hnsw.enter_point = ()
-    hnsw.max_layer = -1
-    for node in nodes:
-        hnsw.insert(node, efC)
-    return hnsw
-
-
-def construction_listekage(Base,Requetes):          # Construis la liste des distance entre les points du niveau 0, distance obtenue par shortest path sur graphe de leakage
-    while True :
-        mimosa = {}
-        hnsw = construction(Base)
-        Lbase = list(Base)
-        Lbase = Known_q.permutation_aleatoire(Lbase)
-        Arbre = []
-        mimosa = {}
-        Umimosa = {}
-        G_L = {}
-        retry_while = False
-        for node in Lbase :
-            l=[]
-            a=hnsw.knn_search(node,1,1,l)
-            if a[0]!=[node] :
-                retry_while = True
-                break
-            Arbre.append(a[1])
-        if retry_while:
-            continue 
-        for node in Requetes:
-            l=[]
-            a=hnsw.knn_search(node,1,1,l)
-            Arbre.append(a[1])
-        mimosa = arbre.arbre(Arbre)
-        Umimosa = arbre.directed_to_undirected(mimosa)
-        #arbre.visualize_tree_as_graph(mimosa)
-        #arbre.visualize_tree_as_graph(Umimosa)
-        #plot_hnsw_graph(hnsw)
-        G_L = nx.DiGraph(Umimosa)
-        L_distance_graph = []
-        for node in Base :
-            d=[]
-            for n in Base :
-                d.append(nx.shortest_path_length(G_L,(node,0),(n,0)))
-            L_distance_graph.append(d)
-        return L_distance_graph 
-
-def Construction_Distlaunay(Base):                  #Construis la liste des distances entre les points du niveau 0, distance obtenue par shortest path sur graphe de Delaunay
-    L_distance_nodes = []
-    G_0 = rdc.Set_to_DLGraph(Base,dim)
-    for node in Base :
-        d=[]
-        for n in Base :
-            d.append(nx.shortest_path_length(G_0,node,n))
-        L_distance_nodes.append(d)
-    return L_distance_nodes
-
-def Score(Test,nb_requetes,nb_nodes,known):                             # Resort le nombre de keywords retrouvé. (Test est le nombre de construction d'hnsw que l'attaquant fait pour construire le dictionnaire de score. explose la complexité, à mettre en pré-calcul pour faire des stats)
-    score_moyen = {}
-    Requetes, Base = generation(nb_nodes,nb_requetes)
-    L_distance_nodes = Construction_Distlaunay(Base)
-    for k in range (Test):                                              # Construis le dictionnaire de score                  
-        L_distance_graph = construction_listekage(Base,Requetes)
-        score = Known_q.scoring(L_distance_nodes,L_distance_graph)
-        score_moyen = Known_q.somme_deux_dictionnaires(score_moyen,score)
-
-    R = Known_q.Scoring_association(known,L_distance_nodes,L_distance_graph,score_moyen)
-    Ev = Known_q.evaluation(R)
-    return Ev
-
-
-print('nombre de keywords trouvé :', Score(5,nb_requetes,nb_nodes,known), 'en en connaissant', known, 'sur', nb_nodes)
-
-#Plutot que de construire delaunay, construire plein d'hnsw et reregarder les distnaces moyennes -------------- WIP Grande dimension plutot que les distances euclidiennes
-#Finir la generation du score  -------------------------------------------------------------------------------- Done
-#Faire l'effet boul de de niege  ------------------------------------------------------------------------------ No
-#triche un peu car les élements sont toujours insérés dans le même ordre -------------------------------------- Done
-# Gérer nombre petit de requetes, ou qd un kw n'est jamais feuille -------------------------------------------- WIP
-# Faire un dictionnaire pré-calculé de score ------------------------------------------------------------------ WIP
-# Mesurer corrélation entre distance réele et distance graphe en fcontion de la dimension --------------------- WIP

@@ -47,7 +47,7 @@ def evaluation(Dico):
             else:
                 if j[0] not in L and j[1] not in L:
                     if j[0] not in MissLeft and j[1] not in MissRight:
-                        
+
                         MissLeft.add(j[0])
                         MissRight.add(j[1]) #traiter comme deux listes (1,2)/!(2,1)----> faire deux listes miss
     return len(L)
@@ -73,7 +73,7 @@ def scoring(Delaunay,Leakage):     #(Delaunay,Leakage), nbr de permutation pour 
                 score[(Delaunay[lbd][i],Leakage[lbd][i])]+=1
             else:
                 score[(Delaunay[lbd][i],Leakage[lbd][i])]=1
-            
+
             for j in range(len(Delaunay)):
                 if (Delaunay[lbd][i],Leakage[lbd][j]) in Fscore :
                     Fscore[(Delaunay[lbd][i],Leakage[lbd][j])]+=1
@@ -85,7 +85,7 @@ def scoring(Delaunay,Leakage):     #(Delaunay,Leakage), nbr de permutation pour 
     #print(inverse_dictionnaire(Fscore))
     #print(inverse_dictionnaire(score))
     return score
-    
+
 
 def somme_deux_dictionnaires(dict1, dict2):
     resultat = {}
@@ -107,9 +107,9 @@ def somme_deux_dictionnaires(dict1, dict2):
     return resultat
 
 
-def permutation_aleatoire(liste):
+def permutation_aleatoire(l):
     # Copier la liste originale pour éviter de la modifier directement
-    liste_permutee = liste.copy()
+    liste_permutee = l.copy()
     # Permuter aléatoirement la liste
     random.shuffle(liste_permutee)
     return liste_permutee
