@@ -313,18 +313,18 @@ def plot_hnsw_graph(hnsw):
 '''------------------------------------------------------------'''
 
 
-dim = 5
-M = 4
-Mmax = 4
-mL = 0.9
-hnsw = HNSW(dim, M=8, Mmax=8, mL=0.9)
-max_value = 100
-nb_nodes = 15
-nb_requetes = 1000
-efC = 10
-known = 10
+dim = 3                     #dimension des vecteurs
+M = 8                       #Nombre de connexion lors de l'insertion
+Mmax = 8                    #Nombre de connexion maximale d'un noeuds dans hnsw (Mmax=2*Mmax au niveau 0)
+mL = 0.9                    #Coefficient qui pondere la loi de proba (plus mL est haut et plus le niveau max est haut)
+max_value = 100             #Max value pour les coefficient du vecteur 
+nb_nodes = 700              #Nombre de vecteurs dans hnsw
+nb_requetes = 1000          #Nombre de requetes approximées
+efC = 10                    #Coefficient de voisins explorés lors de la construction
+known = 70                  #Nombre de vecteurs connus
 
-def generation(nb_nodes,nb_requetes):
+
+def generation(nb_nodes,nb_requetes):       #Genère un set de Nodes qui servira à construire hnsw, et un set de requetes qui serviront de recherches approximées 
     nodes = set()
     Requetes = set()
     Base = set()
@@ -342,9 +342,9 @@ def generation(nb_nodes,nb_requetes):
     Requetes = nodes - Base
     return Requetes, Base
     
-def construction(nodes):
+def construction(nodes):            #Generes hnsw, en inserant les points dans l'ordre 
     hnsw = HNSW(dim,M,Mmax,mL)
-    hnsw.graph = {} #empty_graph_with_layers(self.max_layer)
+    hnsw.graph = {} 
     hnsw.is_empty = True
     hnsw.enter_point = ()
     hnsw.max_layer = -1
@@ -353,7 +353,7 @@ def construction(nodes):
     return hnsw
 
 
-def construction_listekage(Base,Requetes):
+def construction_listekage(Base,Requetes):          # Construis la liste des distance entre les points du niveau 0, distance obtenue par shortest path sur graphe de leakage
     while True :
         mimosa = {}
         hnsw = construction(Base)
@@ -372,16 +372,14 @@ def construction_listekage(Base,Requetes):
                 break
             Arbre.append(a[1])
         if retry_while:
-            continue
-        
+            continue 
         for node in Requetes:
             l=[]
             a=hnsw.knn_search(node,1,1,l)
             Arbre.append(a[1])
-        
         mimosa = arbre.arbre(Arbre)
-        #arbre.visualize_tree_as_graph(mimosa)
         Umimosa = arbre.directed_to_undirected(mimosa)
+        #arbre.visualize_tree_as_graph(mimosa)
         #arbre.visualize_tree_as_graph(Umimosa)
         #plot_hnsw_graph(hnsw)
         G_L = nx.DiGraph(Umimosa)
@@ -393,7 +391,7 @@ def construction_listekage(Base,Requetes):
             L_distance_graph.append(d)
         return L_distance_graph 
 
-def Construction_Distlaunay(Base):
+def Construction_Distlaunay(Base):                  #Construis la liste des distances entre les points du niveau 0, distance obtenue par shortest path sur graphe de Delaunay
     L_distance_nodes = []
     G_0 = rdc.Set_to_DLGraph(Base,dim)
     for node in Base :
@@ -403,11 +401,11 @@ def Construction_Distlaunay(Base):
         L_distance_nodes.append(d)
     return L_distance_nodes
 
-def Score(Test,nb_requetes,nb_nodes,known):
+def Score(Test,nb_requetes,nb_nodes,known):                             # Resort le nombre de keywords retrouvé. (Test est le nombre de construction d'hnsw que l'attaquant fait pour construire le dictionnaire de score. explose la complexité, à mettre en pré-calcul pour faire des stats)
     score_moyen = {}
     Requetes, Base = generation(nb_nodes,nb_requetes)
     L_distance_nodes = Construction_Distlaunay(Base)
-    for k in range (Test):
+    for k in range (Test):                                              # Construis le dictionnaire de score                  
         L_distance_graph = construction_listekage(Base,Requetes)
         score = Known_q.scoring(L_distance_nodes,L_distance_graph)
         score_moyen = Known_q.somme_deux_dictionnaires(score_moyen,score)
@@ -417,7 +415,7 @@ def Score(Test,nb_requetes,nb_nodes,known):
     return Ev
 
 
-print('nombre de keywords trouvé :', Score(50,nb_requetes,nb_nodes,known), 'en en connaissant', known, 'sur', nb_nodes)
+print('nombre de keywords trouvé :', Score(5,nb_requetes,nb_nodes,known), 'en en connaissant', known, 'sur', nb_nodes)
 
 #Plutot que de construire delaunay, construire plein d'hnsw et reregarder les distnaces moyennes -------------- WIP Grande dimension plutot que les distances euclidiennes
 #Finir la generation du score  -------------------------------------------------------------------------------- Done
