@@ -5,14 +5,6 @@ import arbre
 import networkx as nx
 
 
-def tt():
-    nodes = set()
-    for _ in range(10):
-        node = 1
-        if node in nodes:
-            continue
-        nodes.add(node)
-
 # Genère un set de Nodes qui servira à construire hnsw, et un set de requetes
 # qui serviront de recherches approximées
 def generation(nb_nodes,nb_requests):
@@ -61,20 +53,16 @@ def construction_listekage(Base,Requetes):
     mimosa = arbre.arborize(paths_to_leaves)
     undirected_mimosa = arbre.directed_to_undirected(mimosa)
     graph_leakage = nx.DiGraph(undirected_mimosa)
-
-    return relative_distances(Base, graph_leakage)
-
-
-def relative_distances(nodes, leakage):
-    get_dist = lambda n, q : nx.shortest_path_length(leakage,(q,0),(n,0))
-    return [[get_dist(n, q) for n in nodes] for q in nodes]
+    get_dist = lambda n, q : nx.shortest_path_length(graph_leakage,(q,0),(n,0))
+    return [[get_dist(n, q) for n in Base] for q in Base]
 
 
 # Construis la liste des distances entre les points du niveau 0, distance
 # obtenue par shortest path sur graphe de Delaunay
 def Construction_Distlaunay(Base, dim):
     G_0 = rdc.Set_to_DLGraph(Base, dim)
-    return relative_distances(Base, G_0)
+    get_dist = lambda n, q : nx.shortest_path_length(G_0,q,n)
+    return [[get_dist(n, q) for n in Base] for q in Base]
 
 # Resort le nombre de keywords retrouvé. (Test est le nombre de construction
 # d'hnsw que l'attaquant fait pour construire le dictionnaire de score. explose
@@ -100,12 +88,12 @@ if __name__ == "__main__":
     Mmax = 8                    #Nombre de connexion maximale d'un noeuds dans hnsw (Mmax=2*Mmax au niveau 0)
     mL = 0.9                    #Coefficient qui pondere la loi de proba (plus mL est haut et plus le niveau max est haut)
     max_value = 100             #Max value pour les coefficient du vecteur
-    nb_nodes = 700              #Nombre de vecteurs dans hnsw
-    nb_requetes = 1000          #Nombre de requetes approximées
+    nb_nodes = 100              #Nombre de vecteurs dans hnsw
+    nb_requetes = nb_nodes*10          #Nombre de requetes approximées
     efC = 10                    #Coefficient de voisins explorés lors de la construction
-    known = 70                  #Nombre de vecteurs connus
+    known = 10                  #Nombre de vecteurs connus
 
-    score_value = score(5,nb_requetes,nb_nodes,known, dim)
+    score_value = score(10,nb_requetes,nb_nodes,known, dim)
 
     print('nombre de keywords trouvé :', score_value, 'en en connaissant', known, 'sur', nb_nodes)
 
