@@ -4,10 +4,10 @@ mod vector;
 
 use hnsw::HnswIndex;
 use rand::Rng;
-use vector::{EuclideanDistance, VectorItem};
+use vector::{Distance, VectorItem};
 
 fn main() {
-    let hnsw = HnswIndex::new(10000, 1.0 / 3.0, 16, Box::new(EuclideanDistance));
+    let hnsw = HnswIndex::new(10000, 1.0 / 3.0, 16, Distance);
 
     // Add a larger number of items
     for i in 0..1000 {

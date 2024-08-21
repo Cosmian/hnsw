@@ -1,28 +1,28 @@
 use crate::node::Node;
-use crate::vector::{DistanceCalculator, VectorItem};
+use crate::vector::{Distance, EuclideanDistanceCalculator, VectorItem};
 use ordered_float::OrderedFloat;
 use rand::Rng;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
-pub struct HnswIndex {
-    nodes: Arc<Mutex<HashMap<usize, Node>>>,
-    max_elements: usize,
+pub struct HnswIndex<TC,TV> {
+    nodes: Arc<Mutex<HashMap<usize, Node<TC,TV>>>>,
+    _max_elements: usize,
     level_lambda: f64,
     max_level: usize,
-    distance_calculator: Box<dyn DistanceCalculator>,
+    distance_calculator: Distance
 }
 
-impl HnswIndex {
+impl HnswIndex<usize,f64> {
     pub fn new(
         max_elements: usize,
         level_lambda: f64,
         max_level: usize,
-        distance_calculator: Box<dyn DistanceCalculator>,
+        distance_calculator: Distance,
     ) -> Self {
         HnswIndex {
             nodes: Arc::new(Mutex::new(HashMap::new())),
-            max_elements,
+            _max_elements: max_elements,
             level_lambda,
             max_level,
             distance_calculator,
@@ -38,7 +38,7 @@ impl HnswIndex {
         layer
     }
 
-    pub fn add(&self, item: VectorItem) -> Result<(), String> {
+    pub fn add(&self, item: VectorItem<f64>) -> Result<(), String> {
         let mut nodes = self.nodes.lock().unwrap();
         let node_id = item.id;
         let layer = self.random_layer();
@@ -53,9 +53,9 @@ impl HnswIndex {
         Ok(())
     }
 
-    pub fn search(&self, query: &VectorItem, k: usize) -> Result<Vec<VectorItem>, String> {
+    pub fn search(&self, query: &VectorItem<f64>, k: usize) -> Result<Vec<VectorItem<f64>>, String> {
         let nodes = self.nodes.lock().unwrap();
-        let mut top_k_items: Vec<(OrderedFloat<f64>, VectorItem)> = Vec::new();
+        let mut top_k_items: Vec<(OrderedFloat<f64>, VectorItem<f64>)> = Vec::new();
 
         for node in nodes.values() {
             let dist = OrderedFloat::<f64>(self.distance_calculator.calculate(query, &node.item));
@@ -73,7 +73,7 @@ impl HnswIndex {
         Ok(result)
     }
 
-    pub fn search_greedy(&self, query: &VectorItem, k: usize) -> Result<Vec<VectorItem>, String> {
+    pub fn _search_greedy(&self, query: &VectorItem<f64>, k: usize) -> Result<Vec<VectorItem<f64>>, String> {
         let nodes = self.nodes.lock().unwrap();
         let entry_point = nodes
             .keys()
@@ -117,7 +117,7 @@ impl HnswIndex {
                 id,
                 vector: nodes.get(&id).unwrap().item.vector.clone(),
             })
-            .collect::<Vec<VectorItem>>();
+            .collect::<Vec<VectorItem<f64>>>();
 
         Ok(top_k_items)
     }
