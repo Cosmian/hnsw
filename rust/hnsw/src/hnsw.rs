@@ -1,5 +1,5 @@
 use crate::node::Node;
-use crate::vector::{Distance, EuclideanDistanceCalculator, VectorItem};
+use crate::vector::{Distance, DistanceCalculator, VectorItem};
 use ordered_float::OrderedFloat;
 use rand::Rng;
 use std::collections::{HashMap, HashSet};

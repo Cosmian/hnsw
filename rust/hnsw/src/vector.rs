@@ -18,11 +18,19 @@ pub trait DistanceCalculator<T : Sub<T> +
         fn calculate(&self, item1: &VectorItem<T>, item2: &VectorItem<T>) -> T;
 }
 
-pub struct Distance;
+pub enum DistanceType {
+    Euclidean,
+}
+
+pub struct Distance {
+    pub _type : DistanceType,
+}
 
 impl DistanceCalculator<f64> for Distance {
     fn calculate(&self, item1: &VectorItem<f64>, item2: &VectorItem<f64>) -> f64 {
-        EuclideanDistanceCalculator::calculate(self, item1, item2)
+        match self._type {
+            DistanceType::Euclidean => EuclideanDistanceCalculator::calculate(self, item1, item2)
+        }
     }
 }
 
