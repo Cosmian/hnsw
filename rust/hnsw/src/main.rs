@@ -1,12 +1,17 @@
 mod hnsw;
 mod node;
 mod vector;
+mod matrix;
 
 use hnsw::HnswIndex;
+use matrix::{InvertibleMatrixBuilder, SecurityMatrix};
 use rand::Rng;
 use vector::{Distance, VectorItem, DistanceType};
 
 fn main() {
+    let matrix = <SecurityMatrix<f64> as InvertibleMatrixBuilder<f64>>::build(10);
+    print!("{}", matrix.m.to_string());
+
     let hnsw = HnswIndex::new(10000,
                                                     1.0 / 3.0,
                                                     16,
@@ -15,12 +20,12 @@ fn main() {
     // Add a larger number of items
     for i in 0..1000 {
         let mut rng = rand::thread_rng();
-        let vector: Vec<f64> = (0..10).map(|_| rng.gen_range(0.0..10.0)).collect();
+        let vector = (0..10).map(|_| rng.gen_range(0.0..10.0)).collect();
         let item = VectorItem { id: i, vector };
         hnsw.add(item).unwrap();
     }
 
-    let test_queries = vec![vec![1.0, 2.0], vec![5.0, 5.0], vec![9.0, 0.0]];
+    let test_queries = vec![vec![1.0, 2.0], vec![5.0, 5.0], vec![9.0, 0.0], vec![0.0, 0.0], vec![0.0,0.0]];
 
     for query_vec in test_queries {
         let query = VectorItem {

@@ -9,3 +9,5 @@ edition = "2021"
 ordered-float = "4.2.0"
 rand = "0.8.5"
 rust-bert = "0.22.0"
+nalgebra = {version = "*", features = ["rand"]}
+num-traits = "0.2.19"
