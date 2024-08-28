@@ -40,7 +40,7 @@ pub trait InvertibleMatrixBuilder<T :
                 m[(i,j)] = Self::_rand();
             }
         }
-        return m.clone()
+        m.clone()
     }
 
     fn make_diagonally_dominant (m : &mut DMatrix<T>) -> DMatrix<T> {
@@ -48,7 +48,7 @@ pub trait InvertibleMatrixBuilder<T :
         for i in 0..l {
             m[(i,i)] = <<T as Sub>::Output as Into<T>>::into(m.row(i).sum() - m[(i,i)])
         }
-        return m.clone()
+        m.clone()
     }
 
     fn build(dim : usize) -> SecurityMatrix<T> {
@@ -57,21 +57,28 @@ pub trait InvertibleMatrixBuilder<T :
             size : dim};
         sm.m = Self::populate(&mut sm.m);
         sm.m = Self::make_diagonally_dominant(&mut sm.m);
-        debug_assert!(sm.m.is_invertible() == true);
-        return sm
+        debug_assert!(sm.m.is_invertible());
+        sm
     }
 }
 
 impl InvertibleMatrixBuilder<f64> for SecurityMatrix<f64> {
     fn _rand () -> f64 {
         let mut rng = rand::thread_rng();
-        return rng.gen::<f64>().abs()
+        rng.gen::<f64>().abs()
     }
 }
 
 impl InvertibleMatrixBuilder<f32> for SecurityMatrix<f32> {
     fn _rand () -> f32 {
         let mut rng = rand::thread_rng();
-        return rng.gen::<f32>().abs()
+        rng.gen::<f32>().abs()
     }
 }
+
+// impl InvertibleMatrixBuilder<i32> for SecurityMatrix<i32> {
+//     fn _rand () -> i32 {
+//         let mut rng = rand::thread_rng();
+//         return rng.gen::<i32>().abs()
+//     }
+// }

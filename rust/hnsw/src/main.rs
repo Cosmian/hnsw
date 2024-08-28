@@ -12,8 +12,12 @@ use vector::{Distance, VectorItem, DistanceType};
 fn main() {
 
     let conf = <Configuration<f64> as ConfigurationInitializer<f64>>::init(10);
-    println!{"{}",conf.m1.m.to_string()};
-    println!{"{}",conf.m2.m.to_string()};
+    println!{"{}",conf.m1.m};
+    println!{"{}",conf.m2.m};
+    for i in 0..conf.s.len() {
+        print!("{}", conf.s[i])
+    }
+    println!("");
 
     let hnsw = HnswIndex::new(10000,
                                                     1.0 / 3.0,

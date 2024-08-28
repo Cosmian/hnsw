@@ -18,6 +18,6 @@ impl Node<usize,f64> {
         ).create_model()?;
         let document_v = embedder.encode(&[document])?;
         let _ : Vec<&f32>= document_v.iter().flatten().collect();
-        return Ok(0)
+        Ok(0)
     }
 }
