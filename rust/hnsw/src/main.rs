@@ -2,15 +2,18 @@ mod hnsw;
 mod node;
 mod vector;
 mod matrix;
+mod configuration;
 
+use configuration::{Configuration, ConfigurationInitializer};
 use hnsw::HnswIndex;
-use matrix::{InvertibleMatrixBuilder, SecurityMatrix};
 use rand::Rng;
 use vector::{Distance, VectorItem, DistanceType};
 
 fn main() {
-    let matrix = <SecurityMatrix<f64> as InvertibleMatrixBuilder<f64>>::build(10);
-    print!("{}", matrix.m.to_string());
+
+    let conf = <Configuration<f64> as ConfigurationInitializer<f64>>::init(10);
+    println!{"{}",conf.m1.m.to_string()};
+    println!{"{}",conf.m2.m.to_string()};
 
     let hnsw = HnswIndex::new(10000,
                                                     1.0 / 3.0,

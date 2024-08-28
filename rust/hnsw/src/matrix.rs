@@ -10,6 +10,8 @@ use rand::Rng;
 // use rand::distributions::uniform::SampleUniform;
 // use rand::distributions::Uniform;
 
+// Fun story: The inverse matrix of an integer matrix is not forcibly an integer
+// matrix.
 pub struct SecurityMatrix<T> {
     pub m : DMatrix<T>,
     pub size : usize
@@ -59,7 +61,6 @@ pub trait InvertibleMatrixBuilder<T :
         return sm
     }
 }
-
 
 impl InvertibleMatrixBuilder<f64> for SecurityMatrix<f64> {
     fn _rand () -> f64 {
