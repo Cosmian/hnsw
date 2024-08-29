@@ -20,6 +20,7 @@ fn main() {
     println!("");
 
     let hnsw = HnswIndex::new(10000,
+                                                    10,
                                                     1.0 / 3.0,
                                                     16,
                                                     Distance {_type :  DistanceType::Euclidean,});

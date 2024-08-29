@@ -1,3 +1,4 @@
+use crate::configuration::{Configuration, ConfigurationInitializer};
 use crate::node::Node;
 use crate::vector::{Distance, DistanceCalculator, VectorItem};
 use ordered_float::OrderedFloat;
@@ -8,14 +9,17 @@ use std::sync::{Arc, Mutex};
 pub struct HnswIndex<TC,TV> {
     nodes: Arc<Mutex<HashMap<usize, Node<TC,TV>>>>,
     _max_elements: usize,
+    _dim_elements: usize,
     level_lambda: f64,
     max_level: usize,
-    distance_calculator: Distance
+    distance_calculator: Distance,
+    configuration: Configuration<TV>
 }
 
 impl HnswIndex<usize,f64> {
     pub fn new(
         max_elements: usize,
+        dim_elements: usize,
         level_lambda: f64,
         max_level: usize,
         distance_calculator: Distance,
@@ -23,9 +27,11 @@ impl HnswIndex<usize,f64> {
         HnswIndex {
             nodes: Arc::new(Mutex::new(HashMap::new())),
             _max_elements: max_elements,
+            _dim_elements : dim_elements,
             level_lambda,
             max_level,
             distance_calculator,
+            configuration: Configuration::<f64>::init(dim_elements)
         }
     }
 
@@ -38,14 +44,68 @@ impl HnswIndex<usize,f64> {
         layer
     }
 
-    pub fn add(&self, item: VectorItem<f64>) -> Result<(), String> {
+    // [-0.5 * sum(v_i^2), p1, .., pn]
+    fn extend_vector_with_first_component (v : &mut Vec<f64>) -> Vec<f64> {
+        // pi^2
+        let squared : Vec<f64> = v.iter().map(|x| x*x).collect();
+        // sum(p_i^2)
+        let first : f64 =squared.iter().sum();
+        // -0.5 * sum(p_i^2)
+        let mut first = [-0.5 * first].to_vec();
+        // [-0.5 * sum(v_i^2), p1, .., pn]
+        first.append(v);
+        first
+    }
+
+    fn build_p1_p2_vectors (s : &Vec<i8>, p : &Vec<f64>, p1 : &mut Vec<f64>, p2 : &mut Vec<f64>) -> (Vec<f64>,Vec<f64>){
+        let mut rng = rand::thread_rng();
+        for i in 0..(s.len()) {
+            if s[i] == 1 {
+                p1.push(p[i] as f64);
+                p2.push(p[i] as f64);
+            } else {
+                let rnd = rng.gen::<f64>();
+                p1.push(rnd);
+                p2.push(p[i] - rnd)
+            }
+        }
+        return (p1.to_vec(),p2.to_vec())
+    }
+
+    fn encrypt_vector (&self, p : &mut Vec<f64>) -> Vec<f64> {
+        // p = [-0.5 * sum(v_i^2), p1, .., pn]
+        let p = Self::extend_vector_with_first_component(p);
+        let (p1,p2) =
+            Self::build_p1_p2_vectors(&self.configuration.s,
+                                    &p,
+                                 &mut Vec::<f64>::new(),
+                                 &mut Vec::<f64>::new());
+
+        let p1p =
+            self.configuration.m1.m.transpose() *
+            nalgebra::DMatrix::<f64>::from_vec(p1.len(),1, p1);
+        let p2p =
+            self.configuration.m2.m.transpose() *
+            nalgebra::DMatrix::<f64>::from_vec(p2.len(),1, p2);
+
+        let mut pp = p1p.as_slice().to_vec();
+        pp.append(&mut p2p.as_slice().to_vec());
+        for i in 0..pp.len() {
+            println!("{}", pp[i])
+        }
+        println!("--end pp--");
+        return pp
+    }
+
+    pub fn add(&self, mut item: VectorItem<f64>) -> Result<(), String> {
         let mut nodes = self.nodes.lock().unwrap();
         let node_id = item.id;
         let layer = self.random_layer();
+        let vec = Self::encrypt_vector(&self, &mut item.vector);
         let new_node = Node {
             id: node_id,
             connections: vec![Vec::new(); self.max_level + 1],
-            item: item.clone(),
+            item: {item.vector = vec; item.clone()},
             layer,
         };
         nodes.insert(node_id, new_node);
