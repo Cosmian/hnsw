@@ -7,8 +7,6 @@ use nalgebra::RealField;
 use nalgebra::Scalar;
 use num_traits::{One, Zero};
 use rand::Rng;
-// use rand::distributions::uniform::SampleUniform;
-// use rand::distributions::Uniform;
 
 // Fun story: The inverse matrix of an integer matrix is not forcibly an integer
 // matrix.
@@ -17,7 +15,7 @@ pub struct SecurityMatrix<T> {
     pub size : usize
 }
 
-// Generate a Diagonally Dominant Matrix. It is invertible by definition.
+
 pub trait InvertibleMatrixBuilder<T :
      Scalar +
      RealField +
@@ -56,7 +54,7 @@ pub trait InvertibleMatrixBuilder<T :
             m : DMatrix::<T>::identity(dim, dim),
             size : dim};
         sm.m = Self::populate(&mut sm.m);
-        sm.m = Self::make_diagonally_dominant(&mut sm.m);
+        //sm.m = Self::make_diagonally_dominant(&mut sm.m);
         debug_assert!(sm.m.is_invertible());
         sm
     }
@@ -65,7 +63,7 @@ pub trait InvertibleMatrixBuilder<T :
 impl InvertibleMatrixBuilder<f64> for SecurityMatrix<f64> {
     fn _rand () -> f64 {
         let mut rng = rand::thread_rng();
-        rng.gen::<f64>().abs()
+        rng.gen_range(0f64..10f64).abs()
     }
 }
 

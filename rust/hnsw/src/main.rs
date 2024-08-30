@@ -26,21 +26,21 @@ fn main() {
                                                     Distance {_type :  DistanceType::Euclidean,});
 
     // Add a larger number of items
-    for i in 0..1000 {
+    for i in 0..100 {
         let mut rng = rand::thread_rng();
-        let vector : Vec<f64> = (0..10).map(|_| rng.gen_range(0i8..10) as f64).collect();
+        let vector : Vec<f64> = (0..10).map(|_| rng.gen_range(0f64..1000f64)).collect();
         println!("len vector: {}", vector.len());
         let item = VectorItem { id: i, vector };
         hnsw.add(item).unwrap();
     }
-    hnsw.add(VectorItem {id : 1001, vector : [9.0,8.0,7.0,6.0,5.0,4.0,3.0,2.0,1.0,0.0].to_vec()}).unwrap();
+    //hnsw.add(VectorItem {id : 1001, vector : [9.0,8.0,7.0,6.0,5.0,4.0,3.0,2.0,1.0,0.0].to_vec()}).unwrap();
 
     let mut rng = rand::thread_rng();
     let test_queries = vec![
-        (0..10).map(|_| rng.gen_range(0i8..10) as f64).collect(),
-        (0..10).map(|_| rng.gen_range(0i8..10) as f64).collect(),
-        (0..10).map(|_| rng.gen_range(0i8..10) as f64).collect(),
-        (0..10).map(|_| rng.gen_range(0i8..10) as f64).collect(),
+        (0..10).map(|_| rng.gen_range(0f64..1000f64)).collect(),
+        (0..10).map(|_| rng.gen_range(0f64..1000f64)).collect(),
+        (0..10).map(|_| rng.gen_range(0f64..1000f64)).collect(),
+        (0..10).map(|_| rng.gen_range(0f64..1000f64)).collect(),
         [9.0,8.0,7.0,6.0,5.0,4.0,3.0,2.0,1.0,0.0].to_vec()];
 
     for query_vec in test_queries {
@@ -53,6 +53,11 @@ fn main() {
                 println!("Search results for query {:?}:", query.vector);
                 for result in results {
                     println!("Found item with id: {}", result.id);
+                    // for v in result.vector {
+                    //     print!("{},", v)
+                    // }
+                    // println!("");
+
                 }
             }
             Err(e) => println!("Search error: {}", e),

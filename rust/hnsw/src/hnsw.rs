@@ -64,7 +64,7 @@ impl HnswIndex<usize,f64> {
                 p1.push(p[i] as f64);
                 p2.push(p[i] as f64);
             } else {
-                let rnd = rng.gen::<f64>();
+                let rnd = rng.gen_range(0f64..10f64);
                 p1.push(rnd);
                 p2.push(p[i] - rnd)
             }
@@ -115,7 +115,7 @@ impl HnswIndex<usize,f64> {
 
     fn extend_query_vector (q : &mut VectorItem<f64>) -> VectorItem<f64> {
         let mut rng = rand::thread_rng();
-        let mut r_v = [rng.gen::<f64>().abs()].to_vec();
+        let mut r_v = [rng.gen_range(0f64..10f64).abs()].to_vec();
         r_v.append(&mut q.vector.iter().map(|x| x * r_v[0]).collect());
         q.vector = r_v;
         return q.clone()
@@ -130,7 +130,7 @@ impl HnswIndex<usize,f64> {
                 q1.push(q.vector[i]);
                 q2.push(q.vector[i]);
             } else {
-                let r = rng.gen::<f64>();
+                let r = rng.gen_range(0f64..10f64);
                 q1.push(r);
                 q2.push(q.vector[i] - r);
             }
