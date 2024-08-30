@@ -53,7 +53,7 @@ pub trait InvertibleMatrixBuilder<T :
 
     fn build(dim : usize) -> SecurityMatrix<T> {
         let mut sm =  SecurityMatrix {
-            m : DMatrix::<T>::identity(dim + 1, dim + 1),
+            m : DMatrix::<T>::identity(dim, dim),
             size : dim};
         sm.m = Self::populate(&mut sm.m);
         sm.m = Self::make_diagonally_dominant(&mut sm.m);

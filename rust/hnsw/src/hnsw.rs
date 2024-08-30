@@ -113,12 +113,57 @@ impl HnswIndex<usize,f64> {
         Ok(())
     }
 
-    pub fn search(&self, query: &VectorItem<f64>, k: usize) -> Result<Vec<VectorItem<f64>>, String> {
+    fn extend_query_vector (q : &mut VectorItem<f64>) -> VectorItem<f64> {
+        let mut rng = rand::thread_rng();
+        let mut r_v = [rng.gen::<f64>().abs()].to_vec();
+        r_v.append(&mut q.vector.iter().map(|x| x * r_v[0]).collect());
+        q.vector = r_v;
+        return q.clone()
+    }
+
+    fn split_query_q1_q2 (&self, q : VectorItem<f64>) -> (Vec<f64>, Vec<f64>) {
+        let mut q1 = Vec::<f64>::new();
+        let mut q2 = Vec::<f64>::new();
+        let mut rng = rand::thread_rng();
+        for i in 0..self.configuration.s.len() {
+            if self.configuration.s[i] == 0 {
+                q1.push(q.vector[i]);
+                q2.push(q.vector[i]);
+            } else {
+                let r = rng.gen::<f64>();
+                q1.push(r);
+                q2.push(q.vector[i] - r);
+            }
+        }
+        (q1,q2)
+    }
+
+    fn encrypt_query(&self, q : &mut VectorItem<f64>) -> Vec<f64> {
+        // (r,r * q_1,..,r * q_n)
+        let q = Self::extend_query_vector(q);
+        let (q1,q2) = Self::split_query_q1_q2(&self, q);
+        let m1_inv = self.configuration.m1.m.clone().try_inverse().unwrap();//unsafe and clone
+        let m2_inv = self.configuration.m2.m.clone().try_inverse().unwrap();//unsafe and clone
+
+        let q1p =
+            m1_inv *
+            nalgebra::DMatrix::<f64>::from_vec(q1.len(),1, q1);
+        let q2p =
+            m2_inv *
+            nalgebra::DMatrix::<f64>::from_vec(q2.len(),1, q2);
+
+        let mut qp = q1p.as_slice().to_vec();
+        qp.append(&mut q2p.as_slice().to_vec());
+        qp
+    }
+    pub fn search(&self, query: &mut VectorItem<f64>, k: usize) -> Result<Vec<VectorItem<f64>>, String> {
+        let q = Self::encrypt_query(&self, query);
+        query.vector = q;
         let nodes = self.nodes.lock().unwrap();
         let mut top_k_items: Vec<(OrderedFloat<f64>, VectorItem<f64>)> = Vec::new();
 
         for node in nodes.values() {
-            let dist = OrderedFloat::<f64>(self.distance_calculator.calculate(query, &node.item));
+            let dist = OrderedFloat::<f64>(self.distance_calculator.calculate(&query, &node.item));
             top_k_items.push((-dist, node.item.clone()));
             top_k_items.sort_unstable_by(|a, b| b.0.cmp(&a.0));
             if top_k_items.len() > k {

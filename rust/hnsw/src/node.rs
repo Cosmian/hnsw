@@ -11,7 +11,7 @@ pub struct Node<TC,TV> {
     pub layer: usize,
 }
 
-impl Node<usize,f64> {
+impl Node<usize,f32> {
     pub fn _create(document : String) -> Result<usize,RustBertError> {
         let embedder = SentenceEmbeddingsBuilder::remote(
             SentenceEmbeddingsModelType::AllMiniLmL12V2

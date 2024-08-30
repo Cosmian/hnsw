@@ -45,8 +45,8 @@ pub trait ConfigurationInitializer<T :
 impl ConfigurationInitializer<f64> for Configuration<f64> {
     fn init (dim : usize) -> Configuration<f64> {
         Configuration {
-            m1 : SecurityMatrix::<f64>::build(dim),
-            m2 : SecurityMatrix::<f64>::build(dim),
+            m1 : SecurityMatrix::<f64>::build(dim + 1),
+            m2 : SecurityMatrix::<f64>::build(dim + 1),
             s : Self::generate_random_vec(dim + 1)
         }
     }
@@ -56,8 +56,8 @@ impl ConfigurationInitializer<f32> for Configuration<f32> {
 
     fn init (dim : usize) -> Configuration<f32> {
         Configuration {
-            m1 : SecurityMatrix::<f32>::build(dim),
-            m2 : SecurityMatrix::<f32>::build(dim),
+            m1 : SecurityMatrix::<f32>::build(dim + 1),
+            m2 : SecurityMatrix::<f32>::build(dim + 1),
             s : Self::generate_random_vec(dim + 1)
         }
     }
